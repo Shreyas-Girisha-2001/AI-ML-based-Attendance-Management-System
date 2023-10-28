@@ -1,12 +1,14 @@
 from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
+import tkinter
 from tkinter import messagebox
 import re
 import mysql.connector
 from student import Student
 from train import Train
 from face_rec import Face_Rec
+from attendance import Attendance
 
 def main():
     win=Tk()
@@ -14,12 +16,12 @@ def main():
     win.mainloop()
 
 
-
 class Login_Window:
     def __init__(self, root):
         self.root = root
         self.root.title("Login")
         self.root.geometry("1920x1080+0+0")
+        self.root.resizable(True,True)
 
         self.bg=ImageTk.PhotoImage(file=r"Dark Green Modern Gradient Wave Linktree Background.jpg")
         
@@ -27,7 +29,7 @@ class Login_Window:
         lbl_bg.place(x=0,y=0,relwidth=1,relheight=1)
 
         frame=Frame(self.root,bg="#5a5192")
-        frame.place(x=500,y=220,width=400,height=400)
+        frame.place(x=500,y=150,width=420,height=400)
 
         get_str=Label(frame,text="Get Started",font=("SF Pro Display",20,"bold"),fg="white",bg="#5a5192")
         get_str.place(x=160,y=20)
@@ -51,13 +53,13 @@ class Login_Window:
         img1=img1.resize((40,40),Image.ANTIALIAS)   
         self.photoimage1=ImageTk.PhotoImage(img1)
         lblimg1=Label(image=self.photoimage1,bg="#5a5192",borderwidth=0)    
-        lblimg1.place(x=530,y=342,width=25,height=25)
+        lblimg1.place(x=530,y=345,width=25,height=25)
 
         img2=Image.open(r"username.png")
         img2=img2.resize((50,50),Image.ANTIALIAS)   
         self.photoimage2=ImageTk.PhotoImage(img2)
         lblimg2=Label(image=self.photoimage2,bg="#5a5192",borderwidth=0)    
-        lblimg2.place(x=530,y=247,width=25,height=25)
+        lblimg2.place(x=530,y=250,width=25,height=25)
 
         #LoginButton
         loginbtn=Button(frame,command=self.login,text="Login",font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="cyan",activeforeground="white",activebackground="#5ebfd9")
@@ -111,7 +113,7 @@ class Login_Window:
         elif self.txt_new_pass.get()=="":
             messagebox.showerror("Error","Please enter the new password",parent=self.root2)
         else:
-            conn=mysql.connector.connect(user="root", password="",host="localhost",database="student_management_system",port="3306")
+            conn=mysql.connector.connect(user="root", password="root",host="localhost",database="student_management_system",port="8889")
             my_cursor=conn.cursor() 
             query=("select * from register where email=%s and sec_q=%s and sec_a=%s")
             value=(self.txtusername.get().lower(),self.combo_security_ques.get(),self.select_sec_ans_entry.get())
@@ -137,7 +139,7 @@ class Login_Window:
         if self.txtusername.get()=="":
             messagebox.showerror("Error","Username is required to reset password")
         else:   
-            conn=mysql.connector.connect(user="root", password="",host="localhost",database="student_management_system",port="3306")
+            conn=mysql.connector.connect(user="root", password="root",host="localhost",database="student_management_system",port="8889")
             my_cursor=conn.cursor()   
             query=("select * from register where email=%s")
             value=(self.txtusername.get(),)
@@ -288,7 +290,7 @@ class Register:
         elif len(self.confirm_pass_entry.get())<7:
             messagebox.showerror("Error","Password must be at least 7 characters",parent=self.root)
         else:
-            conn=mysql.connector.connect(user="root", password="",host="localhost",database="student_management_system",port="3306")
+            conn=mysql.connector.connect(user="root", password="root",host="localhost",database="student_management_system",port="8889")
             my_cursor=conn.cursor()
             query=("Select * from register where email=%s")
             value=(self.var_email.get(),)
@@ -324,13 +326,13 @@ class Face_Recognition_System:
         face_recognize_btn=Button(self.root,command=self.face_reco,text="Face Recognition",font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="#5ebfd9",activeforeground="white",activebackground="#5ebfd9")
         face_recognize_btn.place(x=647,y=430,width=210,height=45)
 
-        attendance_btn=Button(self.root,text="Attendance",font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="#5ebfd9",activeforeground="white",activebackground="#5ebfd9")
+        attendance_btn=Button(self.root,text="Attendance",command=self.attendance_data,font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="#5ebfd9",activeforeground="white",activebackground="#5ebfd9")
         attendance_btn.place(x=1135,y=430,width=210,height=45)
 
         train_data_btn=Button(self.root,command=self.train_data,text="Train Data",font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="#5ebfd9",activeforeground="white",activebackground="#5ebfd9")
         train_data_btn.place(x=382,y=740,width=210,height=45)
 
-        exit_btn=Button(self.root,text="Exit",font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="#5ebfd9",activeforeground="white",activebackground="#5ebfd9")
+        exit_btn=Button(self.root,text="Exit",command=self.exit_win,font=("SF Pro Display",15,"bold"),bd=3,relief=RIDGE,fg="white",bg="#5ebfd9",activeforeground="white",activebackground="#5ebfd9")
         exit_btn.place(x=915,y=740,width=210,height=45)
 
 
@@ -348,7 +350,16 @@ class Face_Recognition_System:
         self.new_window=Toplevel(self.root)
         self.app=Face_Rec(self.new_window)
 
+    def attendance_data(self):
+        self.new_window=Toplevel(self.root)
+        self.app=Attendance(self.new_window)
 
+    def exit_win(self):
+        self.exit_win=tkinter.messagebox.askyesno("Are you sure you want to exit ?",parent=self.root)
+        if self.exit_win >0:
+            self.root.destroy()
+        else:
+            return
 
 
         

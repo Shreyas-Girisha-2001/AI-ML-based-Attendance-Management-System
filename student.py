@@ -4,6 +4,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import mysql.connector
 import cv2 
+import os
 
 
 
@@ -316,65 +317,131 @@ class Student:
             messagebox.showerror("Error","All fields are required",parent=self.root)
         else:
             try:
-                conn=mysql.connector.connect(user="root", password="root",host="localhost",database="student_management_system",port="8889")
-                my_cursor=conn.cursor()
-                my_cursor.execute("select * from student")
-                myresult=my_cursor.fetchall()
-                id=self.var_usn.get()
-                if(id==""):
-                    messagebox.showerror("Error","USN Field are required",parent=self.root)
+                result = messagebox.askquestion("Confirmation", "Do you want to use external camera source to capture the image", icon='warning')
+                if result == 'yes':
+                    conn=mysql.connector.connect(user="root", password="root",host="localhost",database="student_management_system",port="8889")
+                    my_cursor=conn.cursor()
+                    my_cursor.execute("select * from student")
+                    myresult=my_cursor.fetchall()
+                    id=self.var_usn.get()
+                    if(id==""):
+                        messagebox.showerror("Error","USN Field are required",parent=self.root)
+                    else:
+                        for x in myresult:
+                            my_cursor.execute("Update student set Year=%s,Department=%s,Course=%s,Semester=%s,Name=%s,Division=%s,Gender=%s,DOB=%s,Phone=%s,Mail=%s,Teacher=%s,Photo=%s where USN=%s",(
+                                self.var_year.get(),
+                                self.var_dep.get(),
+                                self.var_course.get(),
+                                self.var_sem.get(),
+                                self.var_name.get(),
+                                self.var_div.get(),
+                                self.var_gender.get(),
+                                self.var_dob.get(),
+                                self.var_phone.get(),
+                                self.var_mail.get(),
+                                self.var_tname.get(),
+                                "Yes",
+                                self.var_usn.get()
+                                ))
+                            conn.commit()
+                            self.fetch_data()
+                            self.reset_data() 
+                            conn.close()
+
+                            #loading predifined data on face frontals from opencv
+
+                            face_classifier=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+                            def face_cropped(img):
+                                gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+                                faces=face_classifier.detectMultiScale(gray,1.3,5)
+                                #scaling factor=1.3 and minimum neighbors=5
+                                for (x,y,w,h) in faces:
+                                    face_cropped=img[y:y+h,x:x+w]
+                                    return face_cropped
+                            
+                            cap=cv2.VideoCapture(1) #1 for external cam open is other cam to open then 0
+                            cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+                            cap.set(cv2.CAP_PROP_FRAME_WIDTH,1080)
+                            img_id=0
+                            while True:
+                                ret,my_frame=cap.read()
+                                if face_cropped(my_frame) is not None:
+                                    img_id+=1
+                                    face=cv2.resize(face_cropped(my_frame),(550,550))
+                                    face=cv2.cvtColor(face,cv2.COLOR_BGR2GRAY)
+                                    file_name_path="image_dataset/user."+str(id)+"."+str(img_id)+".jpg"
+                                    cv2.imwrite(file_name_path,face)
+                                    cv2.putText(face,str(img_id),(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(0,255,0),2)
+                                    cv2.imshow("Cropped Face",face)
+
+                                if cv2.waitKey(1) == 13 or int(img_id)==150:
+                                    break
+                            cap.release()
+                            cv2.destroyAllWindows()
+                            messagebox.showinfo("Result","Generating Dataset Completed",parent=self.root)
                 else:
-                    for x in myresult:
-                        my_cursor.execute("Update student set Year=%s,Department=%s,Course=%s,Semester=%s,Name=%s,Division=%s,Gender=%s,DOB=%s,Phone=%s,Mail=%s,Teacher=%s,Photo=%s where USN=%s",(
-                            self.var_year.get(),
-                            self.var_dep.get(),
-                            self.var_course.get(),
-                            self.var_sem.get(),
-                            self.var_name.get(),
-                            self.var_div.get(),
-                            self.var_gender.get(),
-                            self.var_dob.get(),
-                            self.var_phone.get(),
-                            self.var_mail.get(),
-                            self.var_tname.get(),
-                            self.var_radio1.get(),
-                            self.var_usn.get()
-                            ))
-                        conn.commit()
-                        self.fetch_data()
-                        self.reset_data() 
-                        conn.close()
+                    conn=mysql.connector.connect(user="root", password="root",host="localhost",database="student_management_system",port="8889")
+                    my_cursor=conn.cursor()
+                    my_cursor.execute("select * from student")
+                    myresult=my_cursor.fetchall()
+                    id=self.var_usn.get()
+                    if(id==""):
+                        messagebox.showerror("Error","USN Field are required",parent=self.root)
+                    else:
+                        for x in myresult:
+                            my_cursor.execute("Update student set Year=%s,Department=%s,Course=%s,Semester=%s,Name=%s,Division=%s,Gender=%s,DOB=%s,Phone=%s,Mail=%s,Teacher=%s,Photo=%s where USN=%s",(
+                                self.var_year.get(),
+                                self.var_dep.get(),
+                                self.var_course.get(),
+                                self.var_sem.get(),
+                                self.var_name.get(),
+                                self.var_div.get(),
+                                self.var_gender.get(),
+                                self.var_dob.get(),
+                                self.var_phone.get(),
+                                self.var_mail.get(),
+                                self.var_tname.get(),
+                                "Yes",
+                                self.var_usn.get()
+                                ))
+                            conn.commit()
+                            self.fetch_data()
+                            self.reset_data() 
+                            conn.close()
 
-                        #loading predifined data on face frontals from opencv
+                            #loading predifined data on face frontals from opencv
 
-                        face_classifier=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+                            face_classifier=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
-                        def face_cropped(img):
-                            gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-                            faces=face_classifier.detectMultiScale(gray,1.3,5)
-                            #scaling factor=1.3 and minimum neighbors=5
-                            for (x,y,w,h) in faces:
-                                face_cropped=img[y:y+h,x:x+w]
-                                return face_cropped
-                        
-                        cap=cv2.VideoCapture(0) #0 for inbuilt webcam open is other cam to open then 1
-                        img_id=0
-                        while True:
-                            ret,my_frame=cap.read()
-                            if face_cropped(my_frame) is not None:
-                                img_id+=1
-                                face=cv2.resize(face_cropped(my_frame),(450,450))
-                                face=cv2.cvtColor(face,cv2.COLOR_BGR2GRAY)
-                                file_name_path="image_dataset/user."+str(id)+"."+str(img_id)+".jpg"
-                                cv2.imwrite(file_name_path,face)
-                                cv2.putText(face,str(img_id),(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(0,255,0),2)
-                                cv2.imshow("Cropped Face",face)
+                            def face_cropped(img):
+                                gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+                                faces=face_classifier.detectMultiScale(gray,1.3,5)
+                                #scaling factor=1.3 and minimum neighbors=5
+                                for (x,y,w,h) in faces:
+                                    face_cropped=img[y:y+h,x:x+w]
+                                    return face_cropped
+                            
+                            cap=cv2.VideoCapture(0) #0 for inbuilt webcam open is other cam to open then 1
+                            cap.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+                            cap.set(cv2.CAP_PROP_FRAME_WIDTH,1080)
+                            img_id=0
+                            while True:
+                                ret,my_frame=cap.read()
+                                if face_cropped(my_frame) is not None:
+                                    img_id+=1
+                                    face=cv2.resize(face_cropped(my_frame),(550,550))
+                                    face=cv2.cvtColor(face,cv2.COLOR_BGR2GRAY)
+                                    file_name_path="image_dataset/user."+str(id)+"."+str(img_id)+".jpg"
+                                    cv2.imwrite(file_name_path,face)
+                                    cv2.putText(face,str(img_id),(50,50),cv2.FONT_HERSHEY_COMPLEX,2,(0,255,0),2)
+                                    cv2.imshow("Cropped Face",face)
 
-                            if cv2.waitKey(1) == 13 or int(img_id)==100:
-                                break
-                        cap.release()
-                        cv2.destroyAllWindows()
-                        messagebox.showinfo("Result","Generating Dataset completed",parent=self.root)
+                                if cv2.waitKey(1) == 13 or int(img_id)==150:
+                                    break
+                            cap.release()
+                            cv2.destroyAllWindows()
+                            messagebox.showinfo("Result","Generating Dataset completed",parent=self.root)
             except Exception as e:
                 messagebox.showerror("Error",f"Error due to :{str(e)}",parent=self.root)      
 
@@ -428,7 +495,14 @@ class Student:
                     my_cursor=conn.cursor()
                     query="delete from student where USN=%s"
                     val=(self.var_usn.get(),)
+                    partial_name=self.var_usn.get()
                     my_cursor.execute(query, val)
+                    folder_path="image_dataset/"
+                    for filename in os.listdir(folder_path):
+                        if partial_name in filename:
+                            file_path = os.path.join(folder_path, filename)
+                            if os.path.isfile(file_path):
+                                os.remove(file_path)
                 else:
                     if not delete:
                         return
